@@ -32,7 +32,7 @@ This workflow allows small to medium businesses to **automate their proposal ema
 
 2. **Create your workflow**  
    - Add a trigger (Google Form, Airtable, or Email)  
-   - Add the **OpenAI/AI Agent node** with your API key  
+   - Add the **Gemini/AI Agent node** with your API key  
    - Use structured output parser for JSON (optional):  
      ```json
      {
