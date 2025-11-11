@@ -1,0 +1,180 @@
+{
+  "name": "Quote/Proposal Generator",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "17nPy-8HGKwoRFanYBPmZwH9hOpsQ-NYLIv7ne1bw6lo",
+          "mode": "list",
+          "cachedResultName": "Dynamic Bits",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/17nPy-8HGKwoRFanYBPmZwH9hOpsQ-NYLIv7ne1bw6lo/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 539161865,
+          "mode": "list",
+          "cachedResultName": "Form Responses 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/17nPy-8HGKwoRFanYBPmZwH9hOpsQ-NYLIv7ne1bw6lo/edit#gid=539161865"
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        -688,
+        -144
+      ],
+      "id": "39b65f22-2370-465a-a6ef-df77efa23fb8",
+      "name": "Google Sheets Trigger",
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "QjK3CFKkREAykiQj",
+          "name": "Google Sheets Trigger account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Generate a professional proposal based on the following client request:\n\nClient Name: {{ $json.Name }}\nClient Email: {{ $json.Email }}\nService Requested: {{ $json.Service }}\nBudget: {{ $json.Budget }}\nTimeline: {{ $json.Timeline }}\n\nCreate a proposal in HTML suitable for PDF conversion.\n",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are a professional proposal and quote generator. \nYour task is to generate an email for sending a proposal. \n\nOutput must be **valid JSON only**, strictly matching this schema:\n\n{\n  \"emailSubject\": \"string\",\n  \"emailBody\": \"string\"\n}\n\nDo NOT include anything outside of the JSON. Do NOT write explanations, extra text, or formatting.\nComoany name: Dynamic Bits\nCompany email: info@dynamicbits.tech\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -464,
+        -144
+      ],
+      "id": "61f1335c-93fd-417e-90e6-f61ff2731e46",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -624,
+        64
+      ],
+      "id": "00d6bda0-b602-477a-97ea-8b938e126f47",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "ocLZ1Wn2fepxSghz",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Google Sheets Trigger').item.json.Email }}",
+        "subject": "={{ $json.output.emailSubject }}",
+        "message": "={{ $json.output.emailBody }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -112,
+        -144
+      ],
+      "id": "934a3c49-9ceb-46aa-a755-293c4c74b9ee",
+      "name": "Send a message",
+      "webhookId": "b08f5a87-8fd2-4d77-83ae-79bc7fa22b48",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "nmUCuQWJCGO057eC",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"emailSubject\": { \"type\": \"string\" },\n    \"emailBody\": { \"type\": \"string\" }\n  },\n  \"required\": [\"emailSubject\", \"emailBody\"]\n}\n\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -304,
+        64
+      ],
+      "id": "5f9fcc63-7a17-4a94-ab08-6df5c337fd92",
+      "name": "Structured Output Parser"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Sheets Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "88e97235-824f-46aa-89b0-dd1dd1580baa",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0c9534dee5af285a19322bb814f5a8c04e86de07adb80778225cfb99eb98a8c8"
+  },
+  "id": "0t8ySc4HrnVky1MP",
+  "tags": []
+}
